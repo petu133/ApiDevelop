@@ -4,6 +4,10 @@ from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import logging #logging package 
+import time
 
 app = FastAPI()
 
@@ -13,8 +17,18 @@ class Post(BaseModel):
     published: bool = True #set True * by default (only in case the user don't type any information about the field)    
     rating: Optional[int] = None #set None *
 
-#there isn't database yet, so this is hardcode data in the program's memory
-my_posts = [{"title": "this is the title", "content": "this is the content", "id": 1}, {"title": "this is the title2", "content": "this is the content2", "id": 2}]    
+while True:
+    try:
+        conn = psycopg2.connect(host='localhost', database='fastapi', user='postgres',
+        password='systems133', cursor_factory=RealDictCursor)
+        cursor = conn.cursor()
+        print('The connection to database was successful')
+        break
+    except BaseException:
+        logging.exception("An exception was thrown!")
+        time.sleep(2)
+
+my_posts = [{"title": "this is the title", "content": "this is the content", "id": 1}, {"title": "this is the title2", "content": "this is the content2", "id": 2}]    #there isn't database yet, so this is hardcode data in the program's memory
 
 def find_post(id):
     for p in my_posts:
@@ -34,7 +48,10 @@ def root():
 
 @app.get("/posts")
 def get_posts():
-    return {"data": my_posts}
+    cursor.execute(""" SELECT * FROM posts """)
+    posts = cursor.fetchall()
+    return {"data": posts}
+    #return {"data": my_posts} #working with array in local memory
 
 """ Without Base Model (pedantic library)
 @app.post("/post")
@@ -46,14 +63,15 @@ def create_post(payload: dict = Body(...)) -> dict:
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)  #inside the decorator - change the default status code of the specific path operation
 def create_posts(new_post: Post):
-   # print(new_post)
-   # print("The data-type of the above is: ", type(new_post))
-    post_dict = new_post.dict()
-    #print(post_dict)
-   # print("The data-type of the above is: ", type(post_dict))
-    post_dict['id'] = randrange(1,1000)
-    my_posts.append(post_dict)
-    return {"data" : post_dict}
+    # Not use string interpolation (f"{}"") is vulnerable to sql injection.
+    cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s,%s,%s) RETURNING * """, (new_post.title, new_post.content, new_post.published)) #use placeholders variables provided by psycopg2 library module 
+    my_new_post = cursor.fetchone()
+    conn.commit() # raise the data to the postgress database
+    return {"data" : my_new_post}
+    #post_dict = new_post.dict()         # (first intent) working with array in local memory
+    #post_dict['id'] = randrange(1,1000)
+    #my_posts.append(post_dict)
+    #return {"data" : post_dict}
 
 """
 @app.get("/posts/{id}")  
@@ -70,19 +88,26 @@ def get_post(id: int, response: Response): #id is declared to be an int - respon
         return {"message": f"post with id: {id} was no found"}
     return {"post_details": post}
 """
-@app.get("/posts/{id}")
-def get_post(id: int): #In this case, id is declared to be an int. 
-    post = find_post(id)
+@app.get("/posts/{id}") #The data parameter 'id' comes in like a string
+def get_post(id: int): #id converted to be an int. Avoid misspell in the path paramater by the user
+    cursor.execute("""SELECT * FROM posts WHERE id = %s""", (str(id),)) #SQL statament only accepts string || the comma after solves some possible issues that could occur
+    post = cursor.fetchone()
+    #post = find_post(id) (first intent) working with array in local memory
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was no found")
     return {"post_details": post}
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT) 
 def delete_post(id: int):
-    index = find_index_post(id)
-    if index == None:
+    #index = find_index_post(id) (first intent) working with array in local memory
+    cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", (str(id),))
+    deleted_post = cursor.fetchone()
+    conn.commit()
+    print(type(delete_post))
+    #if index == None:
+    if deleted_post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    my_posts.pop(index)
+    #my_posts.pop(index)
     return Response(status_code=status.HTTP_204_NO_CONTENT) #Restful HTTP Status 204 (No Content) MUST NOT include a message body
 
 @app.put("/posts/{id}")
