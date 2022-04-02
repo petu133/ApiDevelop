@@ -4,7 +4,7 @@ from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
-import psycopg2
+import psycopg2 #postgres database driver
 from psycopg2.extras import RealDictCursor
 import logging #logging package 
 import time
@@ -88,7 +88,7 @@ def get_post(id: int, response: Response): #id is declared to be an int - respon
         return {"message": f"post with id: {id} was no found"}
     return {"post_details": post}
 """
-@app.get("/posts/{id}") #The data parameter 'id' comes in like a string
+@app.get("/posts/{id}") #The data parameter 'id' comes in like a String
 def get_post(id: int): #id converted to be an int. Avoid misspell in the path paramater by the user
     cursor.execute("""SELECT * FROM posts WHERE id = %s""", (str(id),)) #SQL statament only accepts string || the comma after solves some possible issues that could occur
     post = cursor.fetchone()
@@ -112,10 +112,18 @@ def delete_post(id: int):
 
 @app.put("/posts/{id}")
 def update_post(id: int, post: Post):
-    index = find_index_post(id)
-    if index == None: #if not index - - works but there was an issue handlilng the zero index of the list my_posts[] 
+    #index = find_index_post(id)
+    cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (post.title, post.content, post.published, str(id)))
+    updated_post = cursor.fetchone()
+    print(updated_post)
+    print(type(updated_post))
+    conn.commit()
+    #if index == None: #if not index - - works but there was an issue handlilng the zero index of the list my_posts[] 
+    if updated_post == None: 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    post_dict = post.dict()
-    post_dict['id'] = id
-    my_posts[index] = post_dict
-    return {"message" : post_dict}
+    return {"message" : updated_post}
+    #post_dict = post.dict()
+    #post_dict['id'] = id
+    #my_posts[index] = post_dict
+    #return {"message" : post_dict}
+    
