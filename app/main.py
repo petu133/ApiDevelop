@@ -1,5 +1,5 @@
 from turtle import pos
-from fastapi import FastAPI, Response, status, HTTPException
+from fastapi import Depends, FastAPI, Response, status, HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
@@ -8,8 +8,21 @@ import psycopg2 #postgres database driver
 from psycopg2.extras import RealDictCursor
 import logging #logging package 
 import time
+from sqlalchemy.orm import Session
+from . import models
+from .database import engine, SessionLocal
+
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 class Post(BaseModel):
     title: str
@@ -45,6 +58,10 @@ def find_index_post(id):
 @app.get("/")
 def root():
     return {"message": "Hello Index World"}
+
+@app.get("/sqlalchemy")
+def test_posts(db: Session = Depends(get_db)):
+    return {"message":"success"}
 
 @app.get("/posts")
 def get_posts():
