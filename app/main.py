@@ -20,7 +20,7 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True #set True * by default (only in case the user don't type any information about the field)    
-    rating: Optional[int] = None #set None *
+    #rating: Optional[int] = None #set None *
 
 while True:
     try:
@@ -35,12 +35,12 @@ while True:
 
 my_posts = [{"title": "this is the title", "content": "this is the content", "id": 1}, {"title": "this is the title2", "content": "this is the content2", "id": 2}]    #there isn't database yet, so this is hardcode data in the program's memory
 
-def find_post(id):
+def find_post(id): #Auxiliar method for working with the array store in local memory
     for p in my_posts:
         if p['id'] == id:
             return p
 
-def find_index_post(id):
+def find_index_post(id): #Auxiliar method for working with the array store in local memory
     for i, p in enumerate(my_posts):
         if p['id'] == id:
             #print(i) The count of the indexes in the iterable created with enumerate method
@@ -53,14 +53,20 @@ def root():
 
 @app.get("/sqlalchemy")
 def test_posts(db: Session = Depends(get_db)):
-    
-    return {"message":"success"}
+    #db.query(models.Post) --- Makes an query as sql plain text. Then turns out that if you print this, shows up in console  "SELECT posts.id AS posts_id, posts.title AS posts_title, posts.content AS posts_content, posts.published AS posts_published, posts.created_at AS posts_created_at FROM posts""
+    posts = db.query(models.Post).all()
+    #print(type(posts), f"posts var contains the following entries from the database : {posts}")
+    #print(f"The address in memory for the post variable is {id(posts)}")
+    return {"data": "info"}
 
 @app.get("/posts")
-def get_posts():
-    cursor.execute(""" SELECT * FROM posts """)
-    posts = cursor.fetchall()
+def get_posts(db: Session = Depends(get_db)):
+    # cursor.execute(""" SELECT * FROM posts """) #working with raw sql and the psycopg2 database driver
+    # posts = cursor.fetchall()
+
+    posts = db.query(models.Post).all() #working with sqlalchemy
     return {"data": posts}
+
     #return {"data": my_posts} #working with array in local memory
 
 """ Without Base Model (pedantic library)
@@ -72,12 +78,24 @@ def create_post(payload: dict = Body(...)) -> dict:
 """
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)  #inside the decorator - change the default status code of the specific path operation
-def create_posts(new_post: Post):
-    # Not use string interpolation (f"{}"") is vulnerable to sql injection.
-    cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s,%s,%s) RETURNING * """, (new_post.title, new_post.content, new_post.published)) #use placeholders variables provided by psycopg2 library module 
-    my_new_post = cursor.fetchone()
-    conn.commit() # raise the data to the postgress database
+def create_posts(new_post: Post, db: Session = Depends(get_db)):
+# ---working with raw sql and the psycopg2 database driver---
+    # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s,%s,%s) RETURNING * """, (new_post.title, new_post.content, new_post.published)) #use placeholders variables provided by psycopg2 library module . NOT use string interpolation (f"{}"") because it is vulnerable to sql injection
+    # my_new_post = cursor.fetchone()
+    # conn.commit() # raise the data to the postgress database, commit the changes that're above
+    # return {"data" : my_new_post}
+   
+#--working with sqlalchemy--
+    print(new_post.dict())
+    #my_new_post = models.Post(title=new_post.title, content=new_post.content, published=new_post.published) #
+    my_new_post = models.Post(**new_post.dict()) #convert new_post to a dictionary and unpack it with the ** operator. Useful to manipulate lot of columns nor a few. Make the inside of the method argument much less verbose
+  # So what * (single star) does is to expand all items available in an iterable, for example list or tuple. And what ** (double star) does is to expand all available keyword arguments in a dictionary for example. source : https://www.quora.com/What-is-the-difference-between-the-and-operators-in-Python-1
+    db.add(my_new_post)
+    db.commit() # raise the data to the postgress database, commit the changes that're above
+    db.refresh(my_new_post) #Since we didn't supply a RETURNING sql statament we need to refresh to retrieve de new inserted data 
+    
     return {"data" : my_new_post}
+   
     #post_dict = new_post.dict()         # (first intent) working with array in local memory
     #post_dict['id'] = randrange(1,1000)
     #my_posts.append(post_dict)
@@ -90,7 +108,7 @@ def get_post(id):   #No invalid id value issue handled . Below ("/posts/{id}")  
     return {"post_details": post}
 """
 """
-@app.get("/posts/{id}")
+@app.get("/posts/{id}")  #working with array in local memory
 def get_post(id: int, response: Response): #id is declared to be an int - response is declared to be a Response's class element
     post = find_post(id)
     if not post:
@@ -102,10 +120,11 @@ def get_post(id: int, response: Response): #id is declared to be an int - respon
 def get_post(id: int): #id converted to be an int. Avoid misspell in the path paramater by the user
     cursor.execute("""SELECT * FROM posts WHERE id = %s""", (str(id),)) #SQL statament only accepts string || the comma after solves some possible issues that could occur
     post = cursor.fetchone()
-    #post = find_post(id) (first intent) working with array in local memory
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was no found")
     return {"post_details": post}
+
+    
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT) 
 def delete_post(id: int):
