@@ -117,9 +117,15 @@ def get_post(id: int, response: Response): #id is declared to be an int - respon
     return {"post_details": post}
 """
 @app.get("/posts/{id}") #The data parameter 'id' comes in like a String
-def get_post(id: int): #id converted to be an int. Avoid misspell in the path paramater by the user
-    cursor.execute("""SELECT * FROM posts WHERE id = %s""", (str(id),)) #SQL statament only accepts string || the comma after solves some possible issues that could occur
-    post = cursor.fetchone()
+def get_post(id: int, db: Session = Depends(get_db)): #id converted to be an int. Avoid misspell in the path paramater by the user
+#---working with raw sql and the psycopg2 database driver---    
+    # cursor.execute("""SELECT * FROM posts WHERE id = %s""", (str(id),)) #SQL statament only accepts string || the comma after solves some possible issues that could occur
+    # post = cursor.fetchone()
+#     if not post:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was no found")
+# #--working with sqlalchemy--
+    post = db.query(models.Post).filter(models.Post.id == id).first()
+    
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was no found")
     return {"post_details": post}
@@ -127,30 +133,53 @@ def get_post(id: int): #id converted to be an int. Avoid misspell in the path pa
     
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT) 
-def delete_post(id: int):
-    #index = find_index_post(id) (first intent) working with array in local memory
-    cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", (str(id),))
-    deleted_post = cursor.fetchone()
-    conn.commit()
-    print(type(delete_post))
+def delete_post(id: int,db: Session = Depends(get_db)):
+#---working with raw sql and the psycopg2 database driver---       
+    # cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", (str(id),))
+    # deleted_post = cursor.fetchone()
+    # conn.commit()
+    # if deleted_post == None:
+    #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+#working with sqlalchemy ORM
+    post_query = db.query(models.Post).filter(models.Post.id == id) #Consolo output SELECT posts.id AS posts_id, posts.title AS posts_title, posts.content AS posts_content, posts.published AS posts_published, posts.created_at AS posts_created_at FROM posts WHERE posts.id = %(id_1)s
+    if post_query.first == None:
+         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    post_query.delete(synchronize_session=False)
+    db.commit()
+
+#working with array in local memory        
+    #index = find_index_post(id) (first intent) 
     #if index == None:
-    if deleted_post == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    # if index == None:
+    #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     #my_posts.pop(index)
+    
     return Response(status_code=status.HTTP_204_NO_CONTENT) #Restful HTTP Status 204 (No Content) MUST NOT include a message body
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post):
+def update_post(id: int, post: Post, db: Session = Depends(get_db)):
+#---working with raw sql and the psycopg2 database driver---       
+    # cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (post.title, post.content, post.published, str(id)))
+    # updated_post = cursor.fetchone()
+    # conn.commit()
+    # if updated_post == None: 
+    #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    # return {"message" : updated_post}
+
+#working with sqlalchemy ORM
+    post_query = db.query(models.Post).filter(models.Post.id == id)  
+
+    post_alchemy = post_query.first()    
+    if post_alchemy == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = f"post with the id: {id} cannot be found")
+    post_query.update(post.dict(), synchronize_session=False)
+    db.commit()
+    return {"message" : post_query.first()}    
+
+#working with array in local memory    
     #index = find_index_post(id)
-    cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (post.title, post.content, post.published, str(id)))
-    updated_post = cursor.fetchone()
-    print(updated_post)
-    print(type(updated_post))
-    conn.commit()
     #if index == None: #if not index - - works but there was an issue handlilng the zero index of the list my_posts[] 
-    if updated_post == None: 
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    return {"message" : updated_post}
     #post_dict = post.dict()
     #post_dict['id'] = id
     #my_posts[index] = post_dict
