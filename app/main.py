@@ -86,9 +86,8 @@ def create_posts(new_post: Post, db: Session = Depends(get_db)):
     # return {"data" : my_new_post}
    
 #--working with sqlalchemy--
-    print(new_post.dict())
     #my_new_post = models.Post(title=new_post.title, content=new_post.content, published=new_post.published) #
-    my_new_post = models.Post(**new_post.dict()) #convert new_post to a dictionary and unpack it with the ** operator. Useful to manipulate lot of columns nor a few. Make the inside of the method argument much less verbose
+    my_new_post = models.Post(**new_post.dict()) #convert new_post to a dictionary and unpack it with the ** operator (UNPACKING OPERATOR for dictionary). Useful to manipulate lot of columns nor a few. Make the inside of the method argument much less verbose
   # So what * (single star) does is to expand all items available in an iterable, for example list or tuple. And what ** (double star) does is to expand all available keyword arguments in a dictionary for example. source : https://www.quora.com/What-is-the-difference-between-the-and-operators-in-Python-1
     db.add(my_new_post)
     db.commit() # raise the data to the postgress database, commit the changes that're above
@@ -169,7 +168,6 @@ def update_post(id: int, post: Post, db: Session = Depends(get_db)):
 
 #working with sqlalchemy ORM
     post_query = db.query(models.Post).filter(models.Post.id == id)  
-
     post_alchemy = post_query.first()    
     if post_alchemy == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = f"post with the id: {id} cannot be found")
