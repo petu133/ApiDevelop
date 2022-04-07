@@ -1,3 +1,4 @@
+from fastapi import FastAPI #move this import at the top of the application's files tends to avoid some errors to arise
 from datetime import datetime
 from pydantic import BaseModel
 

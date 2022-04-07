@@ -1,3 +1,4 @@
+from fastapi import FastAPI #move this import at the top of the application's files tends to avoid some errors to arise
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
