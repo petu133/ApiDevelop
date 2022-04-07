@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends
-from typing import Optional
+from fastapi import FastAPI, Response, status, HTTPException, Depends 
+from typing import Optional, List
 from fastapi.params import Body
 from pydantic import BaseModel
 from random import randrange
@@ -8,19 +8,12 @@ from psycopg2.extras import RealDictCursor
 import logging #logging package 
 import time
 from sqlalchemy.orm import Session
-from . import models
+from . import models, schemas
 from .database import engine, get_db
-
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True #set True * by default (only in case the user don't type any information about the field)    
-    #rating: Optional[int] = None #set None *
 
 while True:
     try:
@@ -57,15 +50,16 @@ def test_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     #print(type(posts), f"posts var contains the following entries from the database : {posts}")
     #print(f"The address in memory for the post variable is {id(posts)}")
-    return {"data": "info"}
+    return {"data": "info testing"}
 
-@app.get("/posts")
+@app.get("/posts", response_model=List[schemas.Post]) # Here my response is a list of our specific schema post model, that's why i need the import of List from typing
 def get_posts(db: Session = Depends(get_db)):
     # cursor.execute(""" SELECT * FROM posts """) #working with raw sql and the psycopg2 database driver
     # posts = cursor.fetchall()
 
     posts = db.query(models.Post).all() #working with sqlalchemy
-    return {"data": posts}
+    #return {"data": posts}
+    return posts # retuning multiple posts, not only one
 
     #return {"data": my_posts} #working with array in local memory
 
@@ -77,15 +71,15 @@ def create_post(payload: dict = Body(...)) -> dict:
     return {"new_post" : f"title : {payload['title']} content : {payload['content']}"}
 """
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)  #inside the decorator - change the default status code of the specific path operation
-def create_posts(new_post: Post, db: Session = Depends(get_db)):
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)  #inside the decorator - change the default status code of the specific path operation
+def create_posts(new_post: schemas.PostBase, db: Session = Depends(get_db)):
 # ---working with raw sql and the psycopg2 database driver---
     # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s,%s,%s) RETURNING * """, (new_post.title, new_post.content, new_post.published)) #use placeholders variables provided by psycopg2 library module . NOT use string interpolation (f"{}"") because it is vulnerable to sql injection
     # my_new_post = cursor.fetchone()
     # conn.commit() # raise the data to the postgress database, commit the changes that're above
     # return {"data" : my_new_post}
    
-#--working with sqlalchemy--
+#--working with sqlalchemy ORM--
     #my_new_post = models.Post(title=new_post.title, content=new_post.content, published=new_post.published) #
     my_new_post = models.Post(**new_post.dict()) #convert new_post to a dictionary and unpack it with the ** operator (UNPACKING OPERATOR for dictionary). Useful to manipulate lot of columns nor a few. Make the inside of the method argument much less verbose
   # So what * (single star) does is to expand all items available in an iterable, for example list or tuple. And what ** (double star) does is to expand all available keyword arguments in a dictionary for example. source : https://www.quora.com/What-is-the-difference-between-the-and-operators-in-Python-1
@@ -93,7 +87,7 @@ def create_posts(new_post: Post, db: Session = Depends(get_db)):
     db.commit() # raise the data to the postgress database, commit the changes that're above
     db.refresh(my_new_post) #Since we didn't supply a RETURNING sql statament we need to refresh to retrieve de new inserted data 
     
-    return {"data" : my_new_post}
+    return my_new_post
    
     #post_dict = new_post.dict()         # (first intent) working with array in local memory
     #post_dict['id'] = randrange(1,1000)
@@ -115,7 +109,7 @@ def get_post(id: int, response: Response): #id is declared to be an int - respon
         return {"message": f"post with id: {id} was no found"}
     return {"post_details": post}
 """
-@app.get("/posts/{id}") #The data parameter 'id' comes in like a String
+@app.get("/posts/{id}", response_model=schemas.Post) #The data parameter 'id' comes in like a String
 def get_post(id: int, db: Session = Depends(get_db)): #id converted to be an int. Avoid misspell in the path paramater by the user
 #---working with raw sql and the psycopg2 database driver---    
     # cursor.execute("""SELECT * FROM posts WHERE id = %s""", (str(id),)) #SQL statament only accepts string || the comma after solves some possible issues that could occur
@@ -127,9 +121,8 @@ def get_post(id: int, db: Session = Depends(get_db)): #id converted to be an int
     
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was no found")
-    return {"post_details": post}
+    return post
 
-    
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT) 
 def delete_post(id: int,db: Session = Depends(get_db)):
@@ -156,8 +149,8 @@ def delete_post(id: int,db: Session = Depends(get_db)):
     
     return Response(status_code=status.HTTP_204_NO_CONTENT) #Restful HTTP Status 204 (No Content) MUST NOT include a message body
 
-@app.put("/posts/{id}")
-def update_post(id: int, post: Post, db: Session = Depends(get_db)):
+@app.put("/posts/{id}", response_model=schemas.Post)
+def update_post(id: int, update_post: schemas.PostCreate, db: Session = Depends(get_db)):
 #---working with raw sql and the psycopg2 database driver---       
     # cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (post.title, post.content, post.published, str(id)))
     # updated_post = cursor.fetchone()
@@ -168,12 +161,12 @@ def update_post(id: int, post: Post, db: Session = Depends(get_db)):
 
 #working with sqlalchemy ORM
     post_query = db.query(models.Post).filter(models.Post.id == id)  
-    post_alchemy = post_query.first()    
-    if post_alchemy == None:
+    post = post_query.first()    
+    if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = f"post with the id: {id} cannot be found")
-    post_query.update(post.dict(), synchronize_session=False)
+    post_query.update(update_post.dict(), synchronize_session=False)
     db.commit()
-    return {"message" : post_query.first()}    
+    return post_query.first()   
 
 #working with array in local memory    
     #index = find_index_post(id)
