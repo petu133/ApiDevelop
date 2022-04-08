@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends 
+
+from fastapi import FastAPI
+from fastapi import Response, status, HTTPException, Depends 
 from typing import Optional, List
 from fastapi.params import Body
 from pydantic import BaseModel
@@ -8,8 +10,8 @@ from psycopg2.extras import RealDictCursor
 import logging #logging package 
 import time
 from sqlalchemy.orm import Session
-from . import models, schemas
 from .database import engine, get_db
+from . import models, schemas, utils
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -178,6 +180,10 @@ def update_post(id: int, update_post: schemas.PostCreate, db: Session = Depends(
 
 @app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)): # user pydantic object should be of type UserCreate (class in Schemas.py) | Add a colon and a data type after each function parameter | Add a colon and a data type after each function parameter websource --- https://towardsdatascience.com/type-hints-in-python-everything-you-need-to-know-in-5-minutes-24e0bad06d0b ---
+    #hash the password - user.password (obtained from the pydantic model)
+    hashed_password = utils.hash(user.password)
+    user.password = hashed_password
+
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()
