@@ -175,4 +175,16 @@ def update_post(id: int, update_post: schemas.PostCreate, db: Session = Depends(
     #post_dict['id'] = id
     #my_posts[index] = post_dict
     #return {"message" : post_dict}
-    
+
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)): # user pydantic object should be of type UserCreate (class in Schemas.py) | Add a colon and a data type after each function parameter | Add a colon and a data type after each function parameter websource --- https://towardsdatascience.com/type-hints-in-python-everything-you-need-to-know-in-5-minutes-24e0bad06d0b ---
+    new_user = models.User(**user.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+
+
+
+
