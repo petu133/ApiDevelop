@@ -4,7 +4,10 @@ from typing import List
 from .. import models, schemas, utils
 from ..database import get_db
 
-router = APIRouter() #router object allows to split up different path operation into distinc files
+router = APIRouter(   #router object allows to split up different path operation into distinc files      
+    prefix="/posts",
+    tags=['Posts'] #groups the paths by category inside the auto-generated Swagger UI documentation
+    ) 
 
 my_posts = [{"title": "this is the title", "content": "this is the content", "id": 1}, {"title": "this is the title2", "content": "this is the content2", "id": 2}]    #there isn't database yet, so this is hardcode data in the program's memory
 
@@ -20,9 +23,9 @@ def find_index_post(id): #Auxiliar method for working with the array store in lo
             #print(p) The element of the values's group
             return i #return the count of the iterable (in this case de list of dictionaries) that match the id provide by the user
 
-@router.get("/")
-def root():
-    return {"message": "Hello Index World"}
+# @router.get("/")
+# def root():
+#      return {"message": "Hello Index World"}
 
 @router.get("/sqlalchemy")
 def test_posts(db: Session = Depends(get_db)):
@@ -32,7 +35,7 @@ def test_posts(db: Session = Depends(get_db)):
     #print(f"The address in memory for the post variable is {id(posts)}")
     return {"data": "hardcoded info"} #hardcoded response to the client
 
-@router.get("/posts", response_model=List[schemas.Post]) # Here my response is a list of our specific schema post model, that's why i need the import of List from typing
+@router.get("/", response_model=List[schemas.Post]) # Here my response is a list of our specific schema post model, that's why i need the import of List from typing
 def get_posts(db: Session = Depends(get_db)):
     # cursor.execute(""" SELECT * FROM posts """) #working with raw sql and the psycopg2 database driver
     # posts = cursor.fetchall()
@@ -51,7 +54,7 @@ def create_post(payload: dict = Body(...)) -> dict:
     return {"new_post" : f"title : {payload['title']} content : {payload['content']}"}
 """
 
-@router.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)  #inside the decorator - change the default status code of the specific path operation
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)  #inside the decorator - change the default status code of the specific path operation
 def create_posts(new_post: schemas.PostBase, db: Session = Depends(get_db)):
 # ---working with raw sql and the psycopg2 database driver---
     # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s,%s,%s) RETURNING * """, (new_post.title, new_post.content, new_post.published)) #use placeholders variables provided by psycopg2 library module . NOT use string interpolation (f"{}"") because it is vulnerable to sql injection
@@ -75,13 +78,13 @@ def create_posts(new_post: schemas.PostBase, db: Session = Depends(get_db)):
     #return {"data" : post_dict}
 
 """
-@app.get("/posts/{id}")  
+@app.get("/{id}")  
 def get_post(id):   #No invalid id value issue handled . Below ("/posts/{id}")  calls do have error handling
     post = find_post(int(id))
     return {"post_details": post}
 """
 """
-@app.get("/posts/{id}")  #working with array in local memory
+@app.get("/{id}")  #working with array in local memory
 def get_post(id: int, response: Response): #id is declared to be an int - response is declared to be a Response's class element
     post = find_post(id)
     if not post:
@@ -89,7 +92,7 @@ def get_post(id: int, response: Response): #id is declared to be an int - respon
         return {"message": f"post with id: {id} was no found"}
     return {"post_details": post}
 """
-@router.get("/posts/{id}", response_model=schemas.Post) #The data parameter 'id' comes in like a String
+@router.get("/{id}", response_model=schemas.Post) #The data parameter 'id' comes in like a String
 def get_post(id: int, db: Session = Depends(get_db)): #id converted to be an int. Avoid misspell in the path paramater by the user
 #---working with raw sql and the psycopg2 database driver---    
     # cursor.execute("""SELECT * FROM posts WHERE id = %s""", (str(id),)) #SQL statament only accepts string || the comma after solves some possible issues that could occur
@@ -104,7 +107,7 @@ def get_post(id: int, db: Session = Depends(get_db)): #id converted to be an int
     return post
 
 
-@router.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT) 
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT) 
 def delete_post(id: int,db: Session = Depends(get_db)):
 #---working with raw sql and the psycopg2 database driver---       
     # cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", (str(id),))
@@ -129,7 +132,7 @@ def delete_post(id: int,db: Session = Depends(get_db)):
     
     return Response(status_code=status.HTTP_204_NO_CONTENT) #Restful HTTP Status 204 (No Content) MUST NOT include a message body
 
-@router.put("/posts/{id}", response_model=schemas.Post)
+@router.put("/{id}", response_model=schemas.Post)
 def update_post(id: int, update_post: schemas.PostCreate, db: Session = Depends(get_db)):
 #---working with raw sql and the psycopg2 database driver---       
     # cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (post.title, post.content, post.published, str(id)))
