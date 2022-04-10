@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
+from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from .. import models, schemas, utils
 from ..database import get_db
@@ -13,7 +13,6 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)): # user
     #hash the password - user.password (obtained from the pydantic model)
     hashed_password = utils.hash(user.password)
     user.password = hashed_password
-
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()

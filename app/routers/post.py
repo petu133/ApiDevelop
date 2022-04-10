@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
+from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from typing import List
 from .. import models, schemas, utils
@@ -100,8 +100,7 @@ def get_post(id: int, db: Session = Depends(get_db)): #id converted to be an int
 #     if not post:
 #         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was no found")
 # #--working with sqlalchemy--
-    post = db.query(models.Post).filter(models.Post.id == id).first() 
-    
+    post = db.query(models.Post).filter(models.Post.id == id).first()   
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was no found")
     return post
