@@ -37,8 +37,8 @@ class UserLogin(BaseModel):
     password: str
 
 class Token(BaseModel):
-    token = str
-    token_type = str
+    token: str
+    token_type: str
 
 class TokenData(BaseModel):
     id: Optional[str] = None   
