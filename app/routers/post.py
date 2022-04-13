@@ -1,7 +1,7 @@
 from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from typing import List
-from .. import models, schemas, utils
+from .. import models, schemas, oauth2, utils
 from ..database import get_db
 
 router = APIRouter(   #router object allows to split up different path operation into distinc files      
@@ -36,7 +36,7 @@ def test_posts(db: Session = Depends(get_db)):
     return {"data": "hardcoded info"} #hardcoded response to the client
 
 @router.get("/", response_model=List[schemas.Post]) # Here my response is a list of our specific schema post model, that's why i need the import of List from typing
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     # cursor.execute(""" SELECT * FROM posts """) #working with raw sql and the psycopg2 database driver
     # posts = cursor.fetchall()
 
@@ -55,13 +55,13 @@ def create_post(payload: dict = Body(...)) -> dict:
 """
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)  #inside the decorator - change the default status code of the specific path operation
-def create_posts(new_post: schemas.PostBase, db: Session = Depends(get_db)):
+def create_posts(new_post: schemas.PostCreate, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)): #get current user is gonna be a dependency that forces the user to have to be logged to create a post.
 # ---working with raw sql and the psycopg2 database driver---
     # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s,%s,%s) RETURNING * """, (new_post.title, new_post.content, new_post.published)) #use placeholders variables provided by psycopg2 library module . NOT use string interpolation (f"{}"") because it is vulnerable to sql injection
     # my_new_post = cursor.fetchone()
     # conn.commit() # raise the data to the postgress database, commit the changes that're above
     # return {"data" : my_new_post}
-   
+
 #--working with sqlalchemy ORM--
     #my_new_post = models.Post(title=new_post.title, content=new_post.content, published=new_post.published) #
     my_new_post = models.Post(**new_post.dict()) #convert new_post to a dictionary and unpack it with the ** operator (UNPACKING OPERATOR for dictionary). Useful to manipulate lot of columns nor a few. Make the inside of the method argument much less verbose
@@ -93,7 +93,7 @@ def get_post(id: int, response: Response): #id is declared to be an int - respon
     return {"post_details": post}
 """
 @router.get("/{id}", response_model=schemas.Post) #The data parameter 'id' comes in like a String
-def get_post(id: int, db: Session = Depends(get_db)): #id converted to be an int. Avoid misspell in the path paramater by the user
+def get_post(id: int, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)): #id converted to be an int. Avoid misspell in the path paramater by the user
 #---working with raw sql and the psycopg2 database driver---    
     # cursor.execute("""SELECT * FROM posts WHERE id = %s""", (str(id),)) #SQL statament only accepts string || the comma after solves some possible issues that could occur
     # post = cursor.fetchone()
@@ -107,7 +107,7 @@ def get_post(id: int, db: Session = Depends(get_db)): #id converted to be an int
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT) 
-def delete_post(id: int,db: Session = Depends(get_db)):
+def delete_post(id: int,db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
 #---working with raw sql and the psycopg2 database driver---       
     # cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", (str(id),))
     # deleted_post = cursor.fetchone()
@@ -132,7 +132,7 @@ def delete_post(id: int,db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT) #Restful HTTP Status 204 (No Content) MUST NOT include a message body
 
 @router.put("/{id}", response_model=schemas.Post)
-def update_post(id: int, update_post: schemas.PostCreate, db: Session = Depends(get_db)):
+def update_post(id: int, update_post: schemas.PostCreate, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
 #---working with raw sql and the psycopg2 database driver---       
     # cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (post.title, post.content, post.published, str(id)))
     # updated_post = cursor.fetchone()

@@ -14,10 +14,8 @@ def create_access_token(data: dict): #the function takes in the payload that com
     encode = data.copy() #Make a copy of the data. This ensure that the original information is not altered...
                      #"data" is a dictionary therefore the "encode" copy is a dict as well
     expire_time = datetime.utcnow() + timedelta(minutes=TOKEN_EXPIRATION_MIN) 
-    print(type(encode))
     #add the time expiration to the data that is going to be encoded within the jwt 
     encode.update({"exp": expire_time}) #important about the this method : "expire" WRONG | "exp" is the key that is needed in the logic to its correct execution
-    print(encode)
     jwt_value = jwt.encode(encode, MASTER_KEY, algorithm=ALGO) #the encode method takes in all the information we have above and generate the JSON Web Token
     return jwt_value
 
@@ -34,8 +32,8 @@ def verify_token(token: str, credential_exception): #Decode the received token, 
     return token_data    
 
 #We can pass the next function as a dependency into anyone of the path operations, this way check the permissions of one user
-def get_current_user(token: Depends(oauth2_bearer)):
-    credential_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Wrong Credentials", headers={"WWW-Authenticate" : "Bearer"})
+def get_current_user(token: str = Depends(oauth2_bearer)):
+    credential_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Wrong Credentials", headers={"WWW-Authenticate": "Bearer"})
     return verify_token(token, credential_exception)
 
     
