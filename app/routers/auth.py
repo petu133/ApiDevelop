@@ -18,15 +18,15 @@ def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session =
 
     #Catch the data from the database that matches with the credential passed by the user
     user = db.query(models.User).filter(models.User.email == user_credentials.username).first() 
-    
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid Credentials")
+        raise HTTPException(status_code=status.HTTP_403_NOT_FOUND, detail=f"Could not validate credentials")
 
     if not utils.verify(user_credentials.password, user.password):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid Credentials")
+        raise HTTPException(status_code=status.HTTP_403_NOT_FOUND, detail=f"Invalid Credentials")
     
-    token = oauth2.create_access_token(data={"user_id" : user.id}) #grab the id of the user from the database (already obtained via query above)
+    token = oauth2.create_access_token(data={"user_id" : user.id}) #grab the id of the user from the database (already obtained via query)
     #the passed can be more than only that (maybe data about the permissions to access several paths)
+    print(token)
     return {"token" : token, "token_type" : "bearer"}  
 
     

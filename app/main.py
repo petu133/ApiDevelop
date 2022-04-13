@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI
 from fastapi import Response, status, HTTPException, Depends 
 from typing import Optional, List
@@ -13,6 +12,7 @@ from sqlalchemy.orm import Session
 from .database import engine, get_db
 from . import models, schemas, utils
 from .routers import post, user, auth
+#The fastapi library importation needs to be at the very top. This allows avoid some issues that could arise if not done in this way.
 
 models.Base.metadata.create_all(bind=engine)
 
