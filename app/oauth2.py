@@ -2,13 +2,14 @@ from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta #timedelta() calculates differences in dates and allows the manipulation of it
-from . import schemas
+from . import schemas, database, models
+from sqlalchemy.orm import Session
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='login') #Paramater: the target url-endpoint 
 
 MASTER_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7" #One of the most important features in the security flow
 ALGO = "HS256"
-TOKEN_EXPIRATION_MIN = 30
+TOKEN_EXPIRATION_MIN = 60
 
 def create_access_token(data: dict): #the function takes in the payload that comes from the login path operation request.
     encode = data.copy() #Make a copy of the data. This ensure that the original information is not altered...
@@ -32,9 +33,27 @@ def verify_token(token: str, credential_exception): #Decode the received token, 
     return token_data    
 
 #We can pass the next function as a dependency into anyone of the path operations, this way check the permissions of one user
-def get_current_user(token: str = Depends(oauth2_bearer)):
+def get_current_user(token: str = Depends(oauth2_bearer), db: Session = Depends(database.get_db)):
     credential_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Wrong Credentials", headers={"WWW-Authenticate": "Bearer"})
-    return verify_token(token, credential_exception)
+   
+    print(f"address memory of token bearer argument: {hex(id(token))}")
+    print(f"token bearer value {token}")
+    print(type(token))
+    
+    token = verify_token(token, credential_exception)
+    
+    print(f"address memory of token set variable: {hex(id(token))}")
+    print(f"the value of the data is {token}")
+    print(type(token))
+
+    user = db.query(models.User).filter(models.User.id == token.id).first()
+    
+    print(user.created_at)
+    print(user.password)
+    print(user.id)
+    print(user.email)
+   
+    return user
 
     
 
