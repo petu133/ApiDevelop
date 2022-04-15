@@ -120,8 +120,11 @@ def delete_post(id: int,db: Session = Depends(get_db), current_user: int = Depen
 
 #working with sqlalchemy ORM
     post_query = db.query(models.Post).filter(models.Post.id == id) #Consolo output SELECT posts.id AS posts_id, posts.title AS posts_title, posts.content AS posts_content, posts.published AS posts_published, posts.created_at AS posts_created_at FROM posts WHERE posts.id = %(id_1)s
-    if post_query.first == None:
-         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    post = post_query.first()
+    if post == None:
+         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} doesn't exist")
+    if current_user.id != post.owner_id: #Makes sure that the owner of the post is the same who is logged in                                                       
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"User: {current_user.email} authenticated but unauthorized to perform this operation")
     post_query.delete(synchronize_session=False)
     db.commit()
 
@@ -149,6 +152,8 @@ def update_post(id: int, update_post: schemas.PostCreate, db: Session = Depends(
     post = post_query.first()    
     if post == None:  
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = f"post with the id: {id} cannot be found")
+    if post.owner_id != current_user.id:  #Makes sure that the owner of the post is the same who is currently logged in 
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"User: {current_user.email} authenticated but unauthorized to perform this operation")
     post_query.update(update_post.dict(), synchronize_session=False)
     db.commit()
     return post_query.first()   
