@@ -16,6 +16,7 @@ class PostCreate(PostBase):
 class Post(PostBase): #schema for the Response Server -> User/Frontend
     id: int            #Here i can specify exactly what field i want to send in the response's body 
     created_at: datetime
+    owner_id: int
     # title , content and published fields inherit from PostBase
     class Config:
         orm_mode = True #Pydantic's orm_mode will tell the Pydantic model to read the data even if it is not a dict but an ORM model...
