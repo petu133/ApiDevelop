@@ -63,10 +63,12 @@ def create_posts(new_post: schemas.PostCreate, db: Session = Depends(get_db), cu
     # return {"data" : my_new_post}
 
 #--working with sqlalchemy ORM--
-    print(f"In this operation the user email is: {current_user.email}")
+    print(f"In this operation -create post- the user id was: {current_user.id}") #This data comes from the authentication process
+    print(f"Also the user email is: {current_user.email}")
     #my_new_post = models.Post(title=new_post.title, content=new_post.content, published=new_post.published) 
-    my_new_post = models.Post(**new_post.dict()) #convert new_post to a dictionary and unpack it with the ** operator (UNPACKING OPERATOR for dictionary). Useful to manipulate lot of columns nor a few. Make the inside of the method argument much less verbose
+    my_new_post = models.Post(owner_id=current_user.id, **new_post.dict()) #we want to create a new post by referencing the Post's model from the database . Convert new_post to a dictionary and unpack it with the ** operator (UNPACKING OPERATOR for dictionary). Useful to manipulate lot of columns nor a few. Make the inside of the method argument much less verbose
   # So what * (single star) does is to expand all items available in an iterable, for example list or tuple. And what ** (double star) does is to expand all available keyword arguments in a dictionary for example. source : https://www.quora.com/What-is-the-difference-between-the-and-operators-in-Python-1
+    print(f"data passed was ...  {new_post}")
     db.add(my_new_post)
     db.commit() # raise the data to the postgress database, commit the changes that're above
     db.refresh(my_new_post) #Since we didn't supply a RETURNING sql statament we need to refresh to retrieve de new inserted data 
