@@ -36,10 +36,9 @@ def test_posts(db: Session = Depends(get_db)):
     return {"data": "hardcoded info"} #hardcoded response to the client
 
 @router.get("/", response_model=List[schemas.Post]) # Here my response is a list of our specific schema post model, that's why i need the import of List from typing
-def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)): #current_user type doesn't matter int this case, can be int, dict, whatever, does not impact not at all 
     # cursor.execute(""" SELECT * FROM posts """) #working with raw sql and the psycopg2 database driver
     # posts = cursor.fetchall()
-    print
     posts = db.query(models.Post).all() #working with sqlalchemy
     #return {"data": posts}
     return posts # retuning multiple posts, not only one
@@ -51,7 +50,7 @@ def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.
 def create_post(payload: dict = Body(...)) -> dict: 
     # Usage of hints for pseudo-static check of data types (similar to an regular static language) inside the argument and the expected output of the function
     print(payload)
-    return {"new_post" : f"title : {payload['title']} content : {payload['content']}"}
+    return {"new_post" : f"title : {payload['title']} content : {payload['content']}"} The dict returned by the function
 """
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)  #inside the decorator - change the default status code of the specific path operation
