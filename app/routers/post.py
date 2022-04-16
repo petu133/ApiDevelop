@@ -1,6 +1,6 @@
 from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional  # This library allows the type checker handles type hints
 from .. import models, schemas, oauth2, utils
 from ..database import get_db
 
@@ -36,10 +36,12 @@ def test_posts(db: Session = Depends(get_db)):
     return {"data": "hardcoded info"} #hardcoded response to the client
 
 @router.get("/", response_model=List[schemas.Post]) # Here my response is a list of our specific schema post model, that's why i need the import of List from typing
-def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)): #current_user type doesn't matter int this case, can be int, dict, whatever, does not impact not at all 
+def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit: int = 10, skip: int = 0, search: Optional[str] = ""): #current_user type doesn't matter int this case, can be int, dict, whatever, does not impact not at all || set "limit" as being a query parameter, default value = 10
     # cursor.execute(""" SELECT * FROM posts """) #working with raw sql and the psycopg2 database driver
     # posts = cursor.fetchall()
-    posts = db.query(models.Post).all() #working with sqlalchemy
+    print(f"query paramater limit value is: {limit}")
+# -- working with sqlalchemy ORM--= 
+    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all() # offset allow to skip over a specific number of posts. This is util for implement Pagination on the frontend
     #return {"data": posts}
     return posts # retuning multiple posts, not only one
 
@@ -94,14 +96,15 @@ def get_post(id: int, response: Response): #id is declared to be an int - respon
         return {"message": f"post with id: {id} was no found"}
     return {"post_details": post}
 """
-@router.get("/{id}", response_model=schemas.Post) #The data parameter 'id' comes in like a String
+@router.get("/{id}", response_model=schemas.Post) #The data parameter 'id' comes in like a String. Here Id is acting as a path parameter.
 def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)): #id converted to be an int. Avoid misspell in the path paramater by the user
 #---working with raw sql and the psycopg2 database driver---    
     # cursor.execute("""SELECT * FROM posts WHERE id = %s""", (str(id),)) #SQL statament only accepts string || the comma after solves some possible issues that could occur
     # post = cursor.fetchone()
 #     if not post:
 #         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was no found")
-# #--working with sqlalchemy--
+
+#--working with sqlalchemy--
     post = db.query(models.Post).filter(models.Post.id == id).first()   
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was no found")
