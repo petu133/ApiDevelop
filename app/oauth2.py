@@ -4,12 +4,13 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta #timedelta() calculates differences in dates and allows the manipulation of it
 from . import schemas, database, models
 from sqlalchemy.orm import Session
+from .config import settings
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='login') #Paramater: the target url-endpoint 
 
-MASTER_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7" #One of the most important features in the security flow
-ALGO = "HS256"
-TOKEN_EXPIRATION_MIN = 60
+MASTER_KEY = settings.master_key #One of the most important features in the security flow
+ALGO = settings.algo
+TOKEN_EXPIRATION_MIN = settings.token_expiration_min
 
 def create_access_token(data: dict): #the function takes in the payload that comes from the login path operation request.
     encode = data.copy() #Make a copy of the data. This ensure that the original information is not altered...

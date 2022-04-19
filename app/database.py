@@ -2,9 +2,18 @@ from fastapi import FastAPI #move this import at the top of the application's fi
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import psycopg2 #postgres database driver
+from psycopg2.extras import RealDictCursor
+import time
+import logging #logging package 
+from .config import settings
 
+#-- connecting to the database with sql alchemy --
 #SQLALCHEMY_DATABASE_URL = 'postgresql://<username>:<password>@<ip-address/hostname>/<database_name>'
-SQLALCHEMY_DATABASE_URL = 'postgresql://postgres:systems133@localhost/fastapi'
+SQLALCHEMY_DATABASE_URL = f'postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}'
+
+print(f"The database name is {settings.database_name}")
+print(type({settings.database_name}))
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
@@ -18,3 +27,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+#-- connecting to the database with regular psycopg sql driver (could be commented without break the app since we have sql mananing the connection within database.py file)
+# allows run raw sql
+while True:
+    try:
+        conn = psycopg2.connect(host='localhost', database='fastapi', user='postgres',
+        password='systems133', cursor_factory=RealDictCursor)
+        cursor = conn.cursor()              
+        print('The connection to database was successful')
+        break
+    except BaseException:
+        logging.exception("An exception was thrown!")
+        time.sleep(2)        
