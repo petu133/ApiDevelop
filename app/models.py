@@ -1,4 +1,5 @@
 #from fastapi import FastAPI #move this import at the top of the application's files tends to avoid some errors to arise
+from tkinter import CASCADE
 from sqlalchemy.sql.expression import text
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
@@ -25,6 +26,10 @@ class User(Base):
     password = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default = text('now()'), nullable = False)
 
+class Vote(Base):
+    __tablename__ = "votes"
 
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True) #Together the user_id and post_id .. 
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), primary_key=True) #makes up a Composite Key
 
 

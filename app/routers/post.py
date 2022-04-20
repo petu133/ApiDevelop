@@ -67,7 +67,7 @@ def create_posts(new_post: schemas.PostCreate, db: Session = Depends(get_db), cu
     print(f"In this operation -create post- the user id was: {current_user.id}") #This data comes from the authentication process
     print(f"Also the user email is: {current_user.email}")
     #my_new_post = models.Post(title=new_post.title, content=new_post.content, published=new_post.published) 
-    my_new_post = models.Post(owner_id=current_user.id, **new_post.dict()) #we want to create a new post by referencing the Post's model from the database . Convert new_post to a dictionary and unpack it with the ** operator (UNPACKING OPERATOR for dictionary). Useful to manipulate lot of columns nor a few. Make the inside of the method argument much less verbose
+    my_new_post = models.Post(owner_id=current_user.id, **new_post.dict()) #we want to create a new post by referencing the Post's model. Convert new_post to a dictionary and unpack it with the ** operator (UNPACKING OPERATOR for dictionary). Useful to manipulate lot of columns nor a few. Make the inside of the method argument much less verbose
   # So what * (single star) does is to expand all items available in an iterable, for example list or tuple. And what ** (double star) does is to expand all available keyword arguments in a dictionary for example. source : https://www.quora.com/What-is-the-difference-between-the-and-operators-in-Python-1
     print(f"data passed was ...  {new_post}")
     db.add(my_new_post)
@@ -121,7 +121,7 @@ def delete_post(id: int,db: Session = Depends(get_db), current_user: int = Depen
     #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 #working with sqlalchemy ORM
-    post_query = db.query(models.Post).filter(models.Post.id == id) #Consolo output SELECT posts.id AS posts_id, posts.title AS posts_title, posts.content AS posts_content, posts.published AS posts_published, posts.created_at AS posts_created_at FROM posts WHERE posts.id = %(id_1)s
+    post_query = db.query(models.Post).filter(models.Post.id == id) #Console output SELECT posts.id AS posts_id, posts.title AS posts_title, posts.content AS posts_content, posts.published AS posts_published, posts.created_at AS posts_created_at FROM posts WHERE posts.id = %(id_1)s
     post = post_query.first()
     if post == None:
          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} doesn't exist")

@@ -1,6 +1,8 @@
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from pydantic.types import conint
+from sqlalchemy import Integer
 
 # A schema is used to validate data we receive as well as to reformat the data that we want to send to the client/browser.
 # Because there is no way we can trust the users/frontend. The users may send anything they want and we don't want to store it without verifying.
@@ -45,7 +47,9 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     id: Optional[str] = None   
 
-
+class Vote(BaseModel):
+    post_id: int
+    dir: conint(le=1) #less than or equal to one
 
 
 
