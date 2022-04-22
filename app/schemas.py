@@ -5,7 +5,8 @@ from pydantic.types import conint
 from sqlalchemy import Integer
 
 # A schema is used to validate data we receive as well as to reformat the data that we want to send to the client/browser.
-# Because there is no way we can trust the users/frontend. The users may send anything they want and we don't want to store it without verifying.
+# Because there is no way we can trust the users/frontend.
+# The users may send anything they want and we don't want to store it without verifying.
 
 class PostBase(BaseModel):
     title: str
@@ -29,8 +30,16 @@ class Post(PostBase): #schema for the Response Server -> User/Frontend
     owner_data: UserOut    #return a pydantic model type . UserOut class need to be above so python properly reads it
     # title , content and published fields inherit from PostBase
     class Config:
-        orm_mode = True #Pydantic's orm_mode will tell the Pydantic model to read the data even if it is not a dict but an ORM model...
-                        #(or any other arbitrary object with attributes). Fast Api documentation web site SOURCE:https://fastapi.tiangolo.com/tutorial/sql-databases/
+        orm_mode = True 
+#Pydantic's orm_mode will tell the Pydantic model to read the data even if it is not a dict but an ORM model...
+#(or any other arbitrary object with attributes). Fast Api documentation web site SOURCE:https://fastapi.tiangolo.com/tutorial/sql-databases/
+
+class PostVote(BaseModel):
+    Post: Post #Name Post (left) with capital P, since sqlalchemy query sends it back in that specific manner 
+    votes: int
+    
+    class Config:
+        orm_mode = True
 
 class UserCreate(BaseModel):
     email: EmailStr
