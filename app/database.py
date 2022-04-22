@@ -1,4 +1,6 @@
-from fastapi import FastAPI #move this import at the top of the application's files tends to avoid some errors to arise
+from fastapi import FastAPI 
+#move FastApi import at the top of the application's files tends to avoid some errors to arise
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -8,7 +10,7 @@ import time
 import logging #logging package 
 from .config import settings
 
-#-- connecting to the database with sql alchemy --
+#-- Set connection up to the database with sqlalchemy orm --
 #SQLALCHEMY_DATABASE_URL = 'postgresql://<username>:<password>@<ip-address/hostname>/<database_name>'
 SQLALCHEMY_DATABASE_URL = f'postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}'
 
@@ -27,9 +29,8 @@ def get_db():
         yield db
     finally:
         db.close()
+#-- set up finished --
 
-#-- connecting to the database with regular psycopg sql driver (could be commented without break the app since we have sql mananing the connection within database.py file)
-# allows run raw sql
 while True:
     try:
         conn = psycopg2.connect(host='localhost', database='fastapi', user='postgres',
@@ -39,4 +40,6 @@ while True:
         break
     except BaseException:
         logging.exception("An exception was thrown!")
-        time.sleep(2)        
+        time.sleep(2)
+#-- connecting to the database with regular psycopg sql driver (could be commented without break the app 
+#since we have sql mananing the connection within database.py file) allows run raw sql                

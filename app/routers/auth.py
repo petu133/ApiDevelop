@@ -14,7 +14,8 @@ def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session =
     #     "username" : " ",  "Whatever data the user pass as value for the key"  (email, pen name, id, etc)
     #     "password" : " "  
     # }
-    # Now in Postman the credentials are no longer pass in through raw json on the body. Instead we pass it as form-data. OTHERWISE 422 Unprocessable Entity issue emerges    
+    # Now in Postman the credentials are no longer pass in through raw json on the body.
+    # Instead we pass it as form-data. OTHERWISE 422 Unprocessable Entity issue emerges    
 
     #Catch the data from the database that matches with the credential passed by the user
     user = db.query(models.User).filter(models.User.email == user_credentials.username).first() 
@@ -26,7 +27,8 @@ def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session =
     if not utils.verify(user_credentials.password, user.password):
         raise HTTPException(status_code=status.HTTP_403_NOT_FOUND, detail=f"Invalid Credentials")
     
-    token = oauth2.create_access_token(data={"user_id" : user.id}) #grab the id of the user from the database (already obtained via query)
+    token = oauth2.create_access_token(data={"user_id" : user.id}) 
+    #grab the id of the user from the database (already obtained via query)
     print(f"the token for this login is: {token}")
     print(type(token))
     #the passed can be more than only that (maybe data about the permissions to access several paths)

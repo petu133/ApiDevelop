@@ -16,16 +16,22 @@ def create_access_token(data: dict): #the function takes in the payload that com
     encode = data.copy() #Make a copy of the data. This ensure that the original information is not altered...
                      #"data" is a dictionary therefore the "encode" copy is a dict as well
     expire_time = datetime.utcnow() + timedelta(minutes=TOKEN_EXPIRATION_MIN) 
-    #add the time expiration to the data that is going to be encoded within the jwt 
-    encode.update({"exp": expire_time}) #important about the this method : "expire" WRONG | "exp" is the key that is needed in the logic to its correct execution
-    jwt_value = jwt.encode(encode, MASTER_KEY, algorithm=ALGO) #the encode method takes in all the information we have above and generate the JSON Web Token
+#add the time expiration to the data that is going to be encoded within the jwt 
+    encode.update({"exp": expire_time}) 
+#important about the this method : "expire" WRONG | "exp" is the key that is needed in the logic to its correct execution
+    
+    jwt_value = jwt.encode(encode, MASTER_KEY, algorithm=ALGO) 
+#the encode method takes in all the information we have above and generate the JSON Web Token
     return jwt_value
 
 def verify_token(token: str, credential_exception): #Decode the received token, verify it, and return the current user.
                                                     #If the token is invalid, return an HTTP error right away.
     try:
         payload = jwt.decode(token, MASTER_KEY, algorithms=ALGO)
-        id: str = payload.get("user_id") #Here the paramater is the data we embedded previously when called the create_access_token in the logic of the Login Path Operation
+        id: str = payload.get("user_id") 
+#Here the paramater "user id" is the data we embedded previously when called
+#the create_access_token in the logic of the Login Path Operation
+        
         if id is None:
             raise credential_exception
         token_data = schemas.TokenData(id = id)
@@ -35,7 +41,8 @@ def verify_token(token: str, credential_exception): #Decode the received token, 
 
 #We can pass the next function as a dependency into anyone of the path operations, this way check the permissions of one user
 def get_current_user(token: str = Depends(oauth2_bearer), db: Session = Depends(database.get_db)):
-    credential_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Wrong Credentials", headers={"WWW-Authenticate": "Bearer"})
+    credential_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+     detail=f"Wrong Credentials", headers={"WWW-Authenticate": "Bearer"})
    
     print(f"address memory of token bearer argument: {hex(id(token))}")
     print(f"token bearer value {token}")
