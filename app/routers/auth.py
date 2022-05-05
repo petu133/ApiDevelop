@@ -18,7 +18,7 @@ def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session =
     # Instead we pass it as form-data. OTHERWISE 422 Unprocessable Entity issue emerges    
 
     #Catch the data from the database that matches with the credential passed by the user
-    user = db.query(models.User).filter(models.User.email == user_credentials.username).first() 
+    user = db.query(models.User).filter(models.User.mail == user_credentials.username).first() 
     print(f"User that matchs with the database is: {user}")
     print(f"the type is: {type(user)}")
     if not user:

@@ -9,7 +9,10 @@ from .config import Settings
 #--cmd commands-- venv\Scripts\activate.bat  "Enter to the environment"
 # uvicorn app.main:app --reload  "Reads app setting variable in main.py and executes the fastapi program"
 
-models.Base.metadata.create_all(bind=engine)
+# models.Base.metadata.create_all(bind=engine) 
+#Tells sql alchemy to run the create statement so that it generates the tables.
+#Since I executed all that logic from alembic, the line can be commnented. 
+
 
 app = FastAPI()
 
