@@ -39,7 +39,7 @@ app.include_router(auth.router)
 app.include_router(vote.router)
 #This allows break out the code into separate files . I can't simply go and only imports the paths 
 #operations by themselves the router logic and its methods - include_router and APIRouter - 
-# are necessary for the correct execution of the FastApi app
+#are necessary for the correct execution of the FastApi app
 
 
 
