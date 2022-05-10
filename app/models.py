@@ -1,5 +1,4 @@
 #from fastapi import FastAPI #move this import at the top of the application's files tends to avoid some errors to arise
-from tkinter import CASCADE
 from sqlalchemy.sql.expression import text
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
