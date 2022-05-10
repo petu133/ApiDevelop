@@ -41,7 +41,9 @@ app.include_router(vote.router)
 #operations by themselves the router logic and its methods - include_router and APIRouter - 
 #are necessary for the correct execution of the FastApi app
 
-
+@app.get("/")
+def root():
+    return {"message": "Hello World pushing out to ubuntu"}
 
 
 
