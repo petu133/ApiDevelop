@@ -59,7 +59,7 @@ def get_current_user(token: str = Depends(oauth2_bearer), db: Session = Depends(
     print(user.created_at)
     print(user.password)
     print(user.id)
-    print(user.email)
+    print(user.mail)
    
     return user
 

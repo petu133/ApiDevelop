@@ -18,7 +18,7 @@ class PostCreate(PostBase):
 
 class UserOut(BaseModel): #I don't want to send back to the user his password.
     id: int
-    email: EmailStr
+    mail: EmailStr
     created_at: datetime
     class Config:        #And with this, the Pydantic model is compatible with ORMs ... 
         orm_mode = True  #and you can just declare it in the response_model argument in your path operations.
@@ -42,11 +42,11 @@ class PostVote(BaseModel):
         orm_mode = True
 
 class UserCreate(BaseModel):
-    email: EmailStr
+    mail: EmailStr
     password: str 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    mail: EmailStr
     password: str
 
 class Token(BaseModel):

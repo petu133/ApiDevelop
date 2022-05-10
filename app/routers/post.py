@@ -94,7 +94,7 @@ def create_posts(new_post: schemas.PostCreate, db: Session = Depends(get_db), cu
 
 #--working with sqlalchemy ORM--
     print(f"In this operation -create post- the user id was: {current_user.id}") #This data comes from the authentication process
-    print(f"Also the user email is: {current_user.email}")
+    print(f"Also the user email is: {current_user.mail}")
     #my_new_post = models.Post(title=new_post.title, content=new_post.content, published=new_post.published) 
     my_new_post = models.Post(owner_id=current_user.id, **new_post.dict())
     #we want to create a new post by referencing the Post's model. 
@@ -169,7 +169,7 @@ def delete_post(id: int,db: Session = Depends(get_db), current_user: int = Depen
          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} doesn't exist")
     if current_user.id != post.owner_id: 
     #Makes sure that the owner of the post is the same who is logged in                                                       
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"User: {current_user.email} authenticated but unauthorized to perform this operation")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"User: {current_user.mail} authenticated but unauthorized to perform this operation")
     post_query.delete(synchronize_session=False)
     db.commit()
 
@@ -201,7 +201,7 @@ def update_post(id: int, update_post: schemas.PostCreate, db: Session = Depends(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = f"post with the id: {id} cannot be found")
     if post.owner_id != current_user.id:  #Makes sure that the owner of the post is the same who is currently logged in 
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-        detail=f"User: {current_user.email} authenticated but unauthorized to perform this operation")
+        detail=f"User: {current_user.mail} authenticated but unauthorized to perform this operation")
     post_query.update(update_post.dict(), synchronize_session=False)
     db.commit()
     return post_query.first()   
