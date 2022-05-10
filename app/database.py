@@ -31,15 +31,15 @@ def get_db():
         db.close()
 #-- set up finished --
 
-while True:
-    try:
-        conn = psycopg2.connect(host='localhost', database='fastapi', user='postgres',
-        password='systems133', cursor_factory=RealDictCursor)
-        cursor = conn.cursor()              
-        print('The connection to database was successful')
-        break
-    except BaseException:
-        logging.exception("An exception was thrown!")
-        time.sleep(2)
+# while True:
+#     try:
+#         conn = psycopg2.connect(host='localhost', database='fastapi', user='postgres',
+#         password='systems133', cursor_factory=RealDictCursor)
+#         cursor = conn.cursor()              
+#         print('The connection to database was successful')
+#         break
+#     except BaseException:
+#         logging.exception("An exception was thrown!")
+#         time.sleep(2)
 #-- connecting to the database with regular psycopg sql driver (could be commented without break the app 
 #since we have sql mananing the connection within database.py file) allows run raw sql                
