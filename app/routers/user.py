@@ -13,9 +13,9 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 #user pydantic object should be of type UserCreate (class in Schemas.py) | Add a colon and a data type after each function parameter 
 #| Add a colon and a data type after each function parameter websource --- https://towardsdatascience.com/type-hints-in-python-everything-you-need-to-know-in-5-minutes-24e0bad06d0b ---
     
-    #hash the password - user.password (obtained from the pydantic model)
-    hashed_password = utils.hash(user.password)
-    user.password = hashed_password
+    #hash the password - user.pw (obtained from the pydantic model)
+    hashed_password = utils.hash(user.pw)
+    user.pw = hashed_password
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()

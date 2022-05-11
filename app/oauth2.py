@@ -57,7 +57,7 @@ def get_current_user(token: str = Depends(oauth2_bearer), db: Session = Depends(
     user = db.query(models.User).filter(models.User.id == token.id).first()
     
     print(user.created_at)
-    print(user.password)
+    print(user.pw)
     print(user.id)
     print(user.mail)
    

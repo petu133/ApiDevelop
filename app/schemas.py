@@ -43,11 +43,11 @@ class PostVote(BaseModel):
 
 class UserCreate(BaseModel):
     mail: EmailStr
-    password: str 
+    pw: str 
 
 class UserLogin(BaseModel):
     mail: EmailStr
-    password: str
+    pw: str
 
 class Token(BaseModel):
     token: str
