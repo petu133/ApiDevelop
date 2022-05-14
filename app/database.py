@@ -17,7 +17,14 @@ SQLALCHEMY_DATABASE_URL = f'postgresql://{settings.database_username}:{settings.
 print(f"The database name is {settings.database_name}")
 print(type({settings.database_name}))
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={'sslmode': "prefer"})
+engine = create_engine(SQLALCHEMY_DATABASE_URL,  pool_pre_ping=True, 
+              pool_recycle=3600, # this line might not be needed
+              connect_args={
+                  "keepalives": 1,
+                  "keepalives_idle": 30,
+                  "keepalives_interval": 10,
+                  "keepalives_count": 5,
+              })
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
