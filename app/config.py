@@ -14,8 +14,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-type_data = type(settings)
-print(f"The data contained in settings of type -{type_data}- is : {settings} ")
+# type_data = type(settings)
+# print(f"The data contained in settings of type -{type_data}- is : {settings} ")
 
 
 # class SettingsExample(BaseSettings): # Handles environment variables
