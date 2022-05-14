@@ -13,18 +13,10 @@ from .config import settings
 #SQLALCHEMY_DATABASE_URL = 'postgresql://<username>:<password>@<ip-address/hostname>/<database_name>'
 SQLALCHEMY_DATABASE_URL = f'postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}'
 
-
 print(f"The database name is {settings.database_name}")
 print(type({settings.database_name}))
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL,  pool_pre_ping=True, 
-              pool_recycle=3600, # this line might not be needed
-              connect_args={
-                  "keepalives": 1,
-                  "keepalives_idle": 30,
-                  "keepalives_interval": 10,
-                  "keepalives_count": 5,
-              })
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
