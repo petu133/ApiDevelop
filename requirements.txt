@@ -28,6 +28,7 @@ orjson==3.6.7
 passlib==1.7.4
 platformdirs==2.5.1
 psycopg2==2.9.3
+psycopg2-binary==2.9.3
 pyasn1==0.4.8
 pycparser==2.21
 pydantic==1.9.0
@@ -50,8 +51,3 @@ uvicorn==0.15.0
 watchgod==0.8.1
 websockets==10.2
 wrapt==1.13.3
-
-#Execute pip install -r requirements.txt in your computer environment to install all the third-party packages in this file.
-
-#All this data comes from the execution of the following ...
-#pip freeze > requirements.txt is the command that automatically created this file from the source API data files
