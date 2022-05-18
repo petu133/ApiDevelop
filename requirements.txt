@@ -51,3 +51,9 @@ uvicorn==0.15.0
 watchgod==0.8.1
 websockets==10.2
 wrapt==1.13.3
+
+
+#Execute pip install -r requirements.txt in your computer environment to install all the third-party packages in this file.
+
+#All this data comes from the execution of the following ...
+#pip freeze > requirements.txt is the command that automatically created this file from the source API data files
