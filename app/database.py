@@ -12,11 +12,14 @@ from .config import settings
 #-- Set connection up to the database with sqlalchemy orm --
 #SQLALCHEMY_DATABASE_URL = 'postgresql://<username>:<password>@<ip-address/hostname>/<database_name>'
 SQLALCHEMY_DATABASE_URL = f'postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}'
-
 # print(f"The database name is {settings.database_name}")
 # print(type({settings.database_name}))
+con = {
+    "sslmode": "verify-full",
+    "sslrootcert": "/etc/ssl/certs/ca-certificates.crt",
+}
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args=con)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
